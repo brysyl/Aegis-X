@@ -4,18 +4,19 @@
 ### Real-Time Edge Security Gateway & Synthetic Fraud/ATO Sentinel
 **Intercept Fraud Before It Touches the Core Ledger.**
 
-[![Zecathon Track](https://img.shields.io/badge/Zenith_Bank_Zecathon_6.0-Track_5:_Digital_Fraud_%26_Financial_Crime-red?style=for-the-badge&logo=shield)](https://zecathon.zenithbank.com)
-[![Runtime](https://img.shields.io/badge/Google_Cloud_Run-Fully_Managed_Serverless-4285F4?style=for-the-badge&logo=googlecloud)](https://cloud.google.com/run)
-[![Backend](https://img.shields.io/badge/Python_3.11+-FastAPI_&_Pydantic_v2-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-[![Cache](https://img.shields.io/badge/Redis_7-Async_Sliding_Window_Log-DC382D?style=for-the-badge&logo=redis)](https://redis.io)
-[![Latency](https://img.shields.io/badge/Edge_Latency-<15ms_p99-06b6d4?style=for-the-badge&logo=speedtest)]()
-[![License](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)]()
+[![ZENITH BANK ZECATHON 6.0](https://img.shields.io/badge/ZENITH_BANK_ZECATHON_6.0-Track_5:_Digital_Fraud-red?style=for-the-badge)]()
+[![RENDER CLOUD](https://img.shields.io/badge/Render-Production_Live-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://aegis-x-q6r3.onrender.com)
+[![PYTHON 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue?style=for-the-badge&logo=python&logoColor=white)]()
+[![FASTAPI & PYDANTIC V2](https://img.shields.io/badge/FastAPI-Pydantic_V2-009688?style=for-the-badge&logo=fastapi&logoColor=white)]()
+[![REDIS 7](https://img.shields.io/badge/Redis_7-Sliding_Window-DC382D?style=for-the-badge&logo=redis&logoColor=white)]()
+[![EDGE LATENCY](https://img.shields.io/badge/Edge_Latency-%3C15MS_P99-00BCD4?style=for-the-badge)]()
+[![LICENSE](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)]()
 
 <br />
 
 *Engineered for Tier-1 Nigerian and African Banking Infrastructure (Finacle, Temenos Transact, Mambu)*
 
-[Live Sandbox Demo](#-interactive-live-simulator-sandbox) • [Core Architecture](#-how-aegis-x-works-core-architecture--flow) • [Quickstart Guide](#-getting-started--local-installation) • [Cloud Run Deploy](#-google-cloud-run-deployment) • [Zecathon Alignment](#-hackathon-alignment-zenith-bank-zecathon-60)
+[Live Sandbox Demo](https://aegis-x-q6r3.onrender.com) • [Core Architecture](docs/architecture.md) • [Quickstart Guide](docs/quickstart.md) • [Render Deployment](docs/render-deploy.md) • [Zecathon Alignment](docs/zecathon.md)
 
 ---
 
@@ -177,7 +178,7 @@ If required travel speed exceeds **commercial aircraft cruise velocity ($920\tex
 | **Server Engine** | **Uvicorn + uvloop + httptools** | Ultra-fast event loop written in C, handling tens of thousands of concurrent connections. |
 | **State & Telemetry Cache** | **Redis 7.0 (Async Sorted Sets)** | Non-blocking sliding window rate limiting logs and 7-day session baseline profiles. |
 | **Fault Tolerance** | **Embedded Zero-Lock Fallback** | Seamless in-memory fallback allowing standalone execution if Redis is offline. |
-| **Edge Compute** | **Google Cloud Run** | Serverless, autoscaling, containerized deployment with sub-10ms ingress routing. |
+| **Edge Compute** | **Render** | Serverless, autoscaling, containerized deployment with sub-10ms ingress routing. |
 | **Frontend HUD** | **HTML5 + Tailwind CSS + Vanilla ES6** | Standalone zero-dependency command center dashboard with live telemetry stream. |
 | **Validation & Schema** | **Pydantic v2 Core** | Strict RFC-compliant typing with C-extension compilation speeds. |
 
