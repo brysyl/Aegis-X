@@ -39,7 +39,7 @@ RUN groupadd -g 10001 appgroup && \
 COPY --from=builder /root/.local /home/appuser/.local
 
 # Copy application source code
-COPY --chown=appuser:appgroup main.py detector.py redis_client.py requirements.txt ./
+COPY --chown=appuser:appgroup *.py requirements.txt ./
 COPY --chown=appuser:appgroup templates/ ./templates/
 
 # Ensure proper permissions
