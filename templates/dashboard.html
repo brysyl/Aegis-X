@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEGIS-X // Zero-Trust Sentinel Control Room & Dynamic MFA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Fira Code"', 'monospace'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            cyber: {
+              bg: '#050811',
+              card: '#0a101d',
+              border: '#152238',
+              accent: '#00f0ff',
+              emerald: '#00ff88',
+              rose: '#ff0055',
+              amber: '#ffaa00',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #050811;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+        linear-gradient(rgba(21, 34, 56, 0.25) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21, 34, 56, 0.25) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+    }
+    .neon-glow-cyan {
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+    }
+    .neon-glow-amber {
+      box-shadow: 0 0 15px rgba(255, 170, 0, 0.25);
+    }
+    .neon-glow-rose {
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+    }
+    .scanline {
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0, 240, 255, 0.03) 50%, rgba(0, 240, 255, 0.03));
+      background-size: 100% 4px;
+    }
+  </style>
+</head>
+<body class="text-slate-200 font-sans min-h-screen flex flex-col p-4 md:p-6 scanline">
+
+  <!-- TOP HUD BAR -->
+  <header class="border border-cyber-border bg-cyber-card/90 backdrop-blur-md rounded-xl p-4 mb-6 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center space-x-4">
+      <div class="relative w-10 h-10 rounded-lg bg-cyan-950/60 border border-cyan-500/40 flex items-center justify-center neon-glow-cyan">
+        <span class="font-mono font-bold text-cyan-400 text-lg">AX</span>
+        <span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
+        <span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full"></span>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-xl font-bold tracking-wider text-white font-mono uppercase">AEGIS-X SENTINEL</h1>
+          <span class="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">DYNAMIC-MFA-v1.1</span>
+        </div>
+        <p class="text-xs text-slate-400 font-mono">Zero-Trust Real-Time Fraud, Behavioral Biometrics & Dynamic MFA Orchestration</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-6 text-xs font-mono">
+      <div class="text-right">
+        <span class="text-slate-400">ENGINE STATE</span>
+        <div class="text-emerald-400 font-bold flex items-center justify-end space-x-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>ONLINE // ARMED</span>
+        </div>
+      </div>
+      <div class="text-right border-l border-cyber-border pl-4">
+        <span class="text-slate-400">EDGE INTERCEPT</span>
+        <div id="stat-latency" class="text-cyan-400 font-bold">&lt; 7.4 ms (p99)</div>
+      </div>
+      <div class="text-right border-l border-cyber-border pl-4">
+        <span class="text-slate-400">MFA ORCHESTRATOR</span>
+        <div class="text-amber-400 font-bold">NIST-800-63B TIERS</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- METRIC TILES -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
+      <div class="text-xs font-mono text-slate-400 uppercase">Ingress Evaluated</div>
+      <div id="metric-total" class="text-2xl md:text-3xl font-mono font-extrabold text-white mt-1">1,482</div>
+      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
+        <span>Sliding 60s Window</span>
+        <span class="text-cyan-400">100% Inspected</span>
+      </div>
+    </div>
+
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
+      <div class="text-xs font-mono text-rose-400 uppercase">Blocked Fraud</div>
+      <div id="metric-blocked" class="text-2xl md:text-3xl font-mono font-extrabold text-rose-400 mt-1">52</div>
+      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
+        <span>Terminated At Edge</span>
+        <span id="metric-block-rate" class="text-rose-400">3.51%</span>
+      </div>
+    </div>
+
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
+      <div class="text-xs font-mono text-amber-400 uppercase">Dynamic MFA Challenges</div>
+      <div id="metric-step-up" class="text-2xl md:text-3xl font-mono font-extrabold text-amber-400 mt-1">119</div>
+      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
+        <span>FIDO2 / Push / YubiKey</span>
+        <span id="metric-stepup-rate" class="text-amber-400">8.03%</span>
+      </div>
+    </div>
+
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
+      <div class="text-xs font-mono text-emerald-400 uppercase">Losses Prevented</div>
+      <div id="metric-saved" class="text-2xl md:text-3xl font-mono font-extrabold text-emerald-400 mt-1">$942,800</div>
+      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
+        <span>Core Ledger Shield</span>
+        <span class="text-emerald-400 font-mono">100% Protected</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- DYNAMIC MFA PROTOCOL BREAKDOWN BAR -->
+  <section class="bg-cyber-card border border-cyber-border rounded-xl p-4 mb-6 font-mono text-xs shadow-xl">
+    <div class="flex items-center justify-between pb-2 border-b border-cyber-border mb-3">
+      <div class="flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span class="text-white font-bold uppercase">Dynamic MFA Protocol Orchestration Distribution</span>
+      </div>
+      <span class="text-slate-400 text-[11px]">Zero-Trust SIM-Swap & Bot Protective Logic</span>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
+        <div class="text-slate-400 text-[10px]">FIDO2 WEBAUTHN PASSKEY</div>
+        <div id="mfa-fido-count" class="text-lg font-bold text-amber-400 mt-0.5">68</div>
+        <div class="text-[10px] text-slate-500">Tier 2: SIM-Swap & Bio Risk</div>
+      </div>
+      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
+        <div class="text-slate-400 text-[10px]">AUTHENTICATOR PUSH</div>
+        <div id="mfa-push-count" class="text-lg font-bold text-cyan-400 mt-0.5">36</div>
+        <div class="text-[10px] text-slate-500">Tier 1: Standard Consumer</div>
+      </div>
+      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
+        <div class="text-slate-400 text-[10px]">HARDWARE SECURITY KEY</div>
+        <div id="mfa-key-count" class="text-lg font-bold text-purple-400 mt-0.5">12</div>
+        <div class="text-[10px] text-slate-500">Tier 3: Elevated Threat / High $</div>
+      </div>
+      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
+        <div class="text-slate-400 text-[10px]">SMS OTP (RESTRICTED)</div>
+        <div id="mfa-sms-count" class="text-lg font-bold text-slate-400 mt-0.5">3</div>
+        <div class="text-[10px] text-rose-500">Disqualified under SIM-swap</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN OPERATIONAL GRID -->
+  <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+    
+    <!-- LEFT: ATTACK SIMULATOR & WORKBENCH (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col space-y-6">
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-cyber-border mb-4">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+            <h2 class="font-mono text-sm font-bold text-white uppercase tracking-wider">Attack Vector Testbed</h2>
+          </div>
+          <span class="text-xs font-mono text-slate-400">Instant Dispatch</span>
+        </div>
+
+        <!-- PRESET ATTACK BUTTONS -->
+        <div class="grid grid-cols-2 gap-2.5 mb-5 font-mono text-xs">
+          <button onclick="triggerAttack('impossible_traveler')" class="p-3 bg-red-950/30 hover:bg-red-900/40 border border-red-500/40 hover:border-red-400 text-left rounded-lg transition-all group">
+            <div class="text-red-400 font-bold flex items-center justify-between">
+              <span>✈️ IMPOSSIBLE TRAVELER</span>
+              <span class="text-[10px] text-red-500">BLOCK</span>
+            </div>
+            <div class="text-slate-400 text-[11px] mt-1">London -> Tokyo (14,350 km/h)</div>
+          </button>
+
+          <button onclick="triggerAttack('credential_stuffing_bot')" class="p-3 bg-orange-950/30 hover:bg-orange-900/40 border border-orange-500/40 hover:border-orange-400 text-left rounded-lg transition-all group">
+            <div class="text-orange-400 font-bold flex items-center justify-between">
+              <span>🤖 BIO-BOT ATO</span>
+              <span class="text-[10px] text-orange-500">BLOCK</span>
+            </div>
+            <div class="text-slate-400 text-[11px] mt-1">0 Jitter + Instant Scroll Teleport</div>
+          </button>
+
+          <button onclick="triggerAttack('sim_swap')" class="p-3 bg-amber-950/30 hover:bg-amber-900/40 border border-amber-500/40 hover:border-amber-400 text-left rounded-lg transition-all group">
+            <div class="text-amber-400 font-bold flex items-center justify-between">
+              <span>📱 SIM-SWAP + ASN</span>
+              <span class="text-[10px] text-amber-500">STEP-UP</span>
+            </div>
+            <div class="text-slate-400 text-[11px] mt-1">SIM 1.8h ago -> FIDO2 Prompt</div>
+          </button>
+
+          <button onclick="triggerAttack('legit_user')" class="p-3 bg-emerald-950/30 hover:bg-emerald-900/40 border border-emerald-500/40 hover:border-emerald-400 text-left rounded-lg transition-all group">
+            <div class="text-emerald-400 font-bold flex items-center justify-between">
+              <span>🛡️ LEGIT WIRE</span>
+              <span class="text-[10px] text-emerald-500">ALLOW</span>
+            </div>
+            <div class="text-slate-400 text-[11px] mt-1">Organic Jitter + Clean ISP</div>
+          </button>
+        </div>
+
+        <!-- FORM CONTROLS -->
+        <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3.5 space-y-3 font-mono text-xs">
+          <div class="text-slate-300 font-bold flex items-center justify-between pb-1 border-b border-cyber-border/60">
+            <span>TRANSACTION PAYLOAD INSPECTOR</span>
+            <span class="text-cyan-400">/v1/ledger/transfer</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-500">TRANSFER AMOUNT ($)</label>
+              <input id="input-amount" type="number" value="12500" class="w-full bg-cyber-card border border-cyber-border rounded px-2.5 py-1 text-white">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500">USER ID</label>
+              <input id="input-userid" type="text" value="usr_apex_8912" class="w-full bg-cyber-card border border-cyber-border rounded px-2.5 py-1 text-white">
+            </div>
+          </div>
+
+          <button onclick="triggerAttack('sim_swap')" class="w-full py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded flex items-center justify-center space-x-2 transition-all">
+            <span>DISPATCH & ORCHESTRATE MFA</span>
+            <span>&rarr;</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LAST VERDICT DISPLAY -->
+      <div id="verdict-card" class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl font-mono text-xs">
+        <div class="flex items-center justify-between pb-2 border-b border-cyber-border mb-3">
+          <span class="text-slate-400">EDGE GATEWAY VERDICT</span>
+          <span id="verdict-latency" class="text-cyan-400">-- ms</span>
+        </div>
+        
+        <div class="flex items-center space-x-4 mb-4">
+          <div id="verdict-score-badge" class="w-16 h-16 rounded-xl border border-cyan-500/40 bg-cyan-950/40 flex flex-col items-center justify-center">
+            <span class="text-[10px] text-slate-400">RISK</span>
+            <span id="verdict-score-val" class="font-mono text-2xl font-black text-cyan-400">--</span>
+          </div>
+          <div>
+            <div id="verdict-decision-tag" class="text-base font-bold text-white">WAITING FOR INGRESS</div>
+            <div id="verdict-action-text" class="text-slate-400 mt-0.5">Select a test vector to trigger inspection.</div>
+          </div>
+        </div>
+
+        <div id="mfa-challenge-banner" class="hidden bg-amber-950/40 border border-amber-500/50 rounded-lg p-3 mb-3">
+          <div class="text-amber-400 font-bold flex items-center justify-between">
+            <span>MFA CHALLENGE DISPATCHED</span>
+            <span id="mfa-banner-id" class="text-[10px] text-slate-400">mfa_xxxx</span>
+          </div>
+          <div id="mfa-banner-instruction" class="text-slate-300 text-[11px] mt-1">Authenticate via FIDO2 Passkey</div>
+          <button onclick="verifyActiveChallenge()" class="mt-2 w-full py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded text-xs transition-colors">
+            Confirm FIDO2 Biometric Proof
+          </button>
+        </div>
+
+        <div id="verdict-tags-container" class="flex flex-wrap gap-1.5 text-[10px]">
+          <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: ADVANCED BIOMETRICS RADAR & TELEMETRY STREAM (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col space-y-6">
+      
+      <!-- ADVANCED BEHAVIORAL BIOMETRICS RADAR -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl font-mono text-xs">
+        <div class="flex items-center justify-between pb-3 border-b border-cyber-border mb-4">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Advanced Behavioral Biometrics Radar</h2>
+          </div>
+          <span class="text-slate-400">5-Layer Analysis</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400">MOUSE JITTER ENTROPY</div>
+            <div id="radar-mouse-val" class="text-emerald-400 font-bold text-base mt-1">0.72 H</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Organic Micro-tremor</div>
+          </div>
+          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400">SCROLL KINETICS</div>
+            <div id="radar-scroll-val" class="text-emerald-400 font-bold text-base mt-1">145.0 &sigma;&sup2;</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Inertial Deceleration</div>
+          </div>
+          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400">CLICK PRESSURE</div>
+            <div id="radar-click-val" class="text-emerald-400 font-bold text-base mt-1">0.08 &sigma;&sup2;</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Physical Pointer</div>
+          </div>
+          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400">ELEMENT HOVER DWELL</div>
+            <div id="radar-hover-val" class="text-emerald-400 font-bold text-base mt-1">340 ms</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Human Pre-click Pause</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE TELEMETRY STREAM TABLE -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl flex-1 flex flex-col font-mono text-xs">
+        <div class="flex items-center justify-between pb-3 border-b border-cyber-border mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Live Edge Telemetry Ingress</h2>
+          </div>
+          <button onclick="refreshStats()" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Refresh</button>
+        </div>
+
+        <div class="overflow-x-auto flex-1 max-h-[360px]">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-slate-500 border-b border-cyber-border text-[11px]">
+                <th class="py-2 px-2">TIME</th>
+                <th class="py-2 px-2">TX ID</th>
+                <th class="py-2 px-2">AMOUNT</th>
+                <th class="py-2 px-2">GEO / ASN</th>
+                <th class="py-2 px-2">RISK</th>
+                <th class="py-2 px-2">VERDICT / MFA</th>
+              </tr>
+            </thead>
+            <tbody id="telemetry-table-body" class="divide-y divide-cyber-border/40 text-slate-300">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let activeChallengeId = null;
+    let recentEvents = [];
+
+    async function triggerAttack(type) {
+      let payload;
+      if (type === 'impossible_traveler') {
+        payload = {
+          user_id: "usr_london_vip_441",
+          account_id: "acc_9921_uk",
+          amount: 25000.0,
+          destination_account: "acc_ext_tokyo_atm",
+          geo: { latitude: 35.6762, longitude: 139.6503, city: "Tokyo", country_code: "JP" },
+          device: { fingerprint_hash: "hash_iphone15_known", user_agent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)", screen_resolution: "390x844" },
+          biometrics: { keystroke_flight_mean_ms: 120.0, keystroke_flight_variance_ms: 22.0, keystroke_dwell_mean_ms: 85.0, keystroke_dwell_variance_ms: 14.0, mouse_curvature_score: 0.8, mouse_jitter_entropy: 0.75, interaction_time_ms: 3800.0 },
+          network: { client_ip: "153.120.88.14", asn_number: 2516, asn_organization: "KDDI Corp", is_datacenter_or_proxy: false }
+        };
+      } else if (type === 'credential_stuffing_bot') {
+        payload = {
+          user_id: "usr_victim_772",
+          account_id: "acc_6120_us",
+          amount: 8200.0,
+          destination_account: "acc_crypto_mule_88",
+          geo: { latitude: 51.5074, longitude: -0.1278, city: "London", country_code: "GB" },
+          device: { fingerprint_hash: "hash_bot_puppeteer_v1", user_agent: "Mozilla/5.0 HeadlessChrome/122.0", is_webdriver: true, screen_resolution: "800x600", webgl_vendor: "Google SwiftShader" },
+          biometrics: { keystroke_flight_mean_ms: 10.0, keystroke_flight_variance_ms: 0.0, keystroke_dwell_mean_ms: 20.0, keystroke_dwell_variance_ms: 0.0, mouse_curvature_score: 0.02, mouse_jitter_entropy: 0.04, mouse_velocity_spikes: 3, scroll_velocity_mean_px_s: 0.0, scroll_velocity_variance: 0.0, is_instant_scroll_teleport: true, click_pressure_mean: 0.0, click_pressure_variance: 0.0, interaction_time_ms: 180.0, ui_element_focus_dwell_ms: { submit_button_hover: 0.0 } },
+          network: { client_ip: "185.220.101.5", asn_number: 9009, asn_organization: "M247 Proxy", is_datacenter_or_proxy: true, is_tor_exit_node: true }
+        };
+      } else if (type === 'sim_swap') {
+        payload = {
+          user_id: "usr_wealth_991",
+          account_id: "acc_8819_us",
+          amount: 14500.0,
+          destination_account: "acc_wire_offshore",
+          geo: { latitude: 37.7749, longitude: -122.4194, city: "San Francisco", country_code: "US" },
+          device: { fingerprint_hash: "hash_new_android_device_unknown", user_agent: "Mozilla/5.0 (Linux; Android 14)", screen_resolution: "1080x2400" },
+          biometrics: { keystroke_flight_mean_ms: 95.0, keystroke_flight_variance_ms: 18.0, keystroke_dwell_mean_ms: 70.0, keystroke_dwell_variance_ms: 12.0, mouse_curvature_score: 0.65, mouse_jitter_entropy: 0.58, interaction_time_ms: 4100.0 },
+          network: { client_ip: "162.243.10.4", asn_number: 14061, asn_organization: "DigitalOcean LLC", is_datacenter_or_proxy: true, sim_swap_age_hours: 1.8 }
+        };
+      } else {
+        payload = {
+          user_id: "usr_verified_220",
+          account_id: "acc_primary_checking",
+          amount: 650.0,
+          destination_account: "acc_utility_corp",
+          geo: { latitude: 40.7128, longitude: -74.0060, city: "New York", country_code: "US" },
+          device: { fingerprint_hash: "hash_macbook_pro_m2_known", user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", screen_resolution: "1920x1080" },
+          biometrics: { keystroke_flight_mean_ms: 145.0, keystroke_flight_variance_ms: 38.0, keystroke_dwell_mean_ms: 88.0, keystroke_dwell_variance_ms: 16.0, mouse_curvature_score: 0.78, mouse_jitter_entropy: 0.72, scroll_velocity_mean_px_s: 380.0, scroll_velocity_variance: 160.0, click_pressure_mean: 0.55, click_pressure_variance: 0.08, interaction_time_ms: 3400.0, ui_element_focus_dwell_ms: { submit_button_hover: 320.0 } },
+          network: { client_ip: "72.229.28.18", asn_number: 7922, asn_organization: "Comcast Residential", is_datacenter_or_proxy: false }
+        };
+      }
+
+      try {
+        const res = await fetch('/v1/ledger/transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        renderVerdict(data, res.status);
+        refreshStats();
+      } catch (err) {
+        console.error("Evaluation error:", err);
+      }
+    }
+
+    function renderVerdict(data, status) {
+      const banner = document.getElementById('mfa-challenge-banner');
+      if (status === 428) {
+        banner.className = "bg-amber-950/40 border border-amber-500/50 rounded-lg p-3 mb-3 block neon-glow-amber";
+        document.getElementById('mfa-banner-id').innerText = data.challenge_id || 'CHALLENGE_REQUIRED';
+        document.getElementById('mfa-banner-instruction').innerText = data.instructions || 'FIDO2 Passkey Verification';
+        activeChallengeId = data.challenge_id;
+
+        document.getElementById('verdict-score-badge').className = "w-16 h-16 rounded-xl border border-amber-500/60 bg-amber-950/60 flex flex-col items-center justify-center";
+        document.getElementById('verdict-score-val').className = "font-mono text-2xl font-black text-amber-400";
+        document.getElementById('verdict-score-val').innerText = data.risk_score;
+        document.getElementById('verdict-decision-tag').className = "text-base font-bold text-amber-400";
+        document.getElementById('verdict-decision-tag').innerText = `STEP-UP REQUIRED [${data.protocol || 'FIDO2'}]`;
+        document.getElementById('verdict-action-text').innerText = "Dynamic MFA challenge generated. SMS revoked due to SIM threat.";
+      } else if (status === 403) {
+        banner.className = "hidden";
+        document.getElementById('verdict-score-badge').className = "w-16 h-16 rounded-xl border border-rose-500/60 bg-rose-950/60 flex flex-col items-center justify-center neon-glow-rose";
+        document.getElementById('verdict-score-val').className = "font-mono text-2xl font-black text-rose-400";
+        document.getElementById('verdict-score-val').innerText = data.risk_score;
+        document.getElementById('verdict-decision-tag').className = "text-base font-bold text-rose-400";
+        document.getElementById('verdict-decision-tag').innerText = "TERMINATED AT EDGE (BLOCK)";
+        document.getElementById('verdict-action-text').innerText = "Zero-trust policy tripped. Core banking ledger shielded.";
+      } else {
+        banner.className = "hidden";
+        document.getElementById('verdict-score-badge').className = "w-16 h-16 rounded-xl border border-emerald-500/60 bg-emerald-950/60 flex flex-col items-center justify-center";
+        document.getElementById('verdict-score-val').className = "font-mono text-2xl font-black text-emerald-400";
+        document.getElementById('verdict-score-val').innerText = data.aegis_verdict ? data.aegis_verdict.risk_score : 12;
+        document.getElementById('verdict-decision-tag').className = "text-base font-bold text-emerald-400";
+        document.getElementById('verdict-decision-tag').innerText = "FORWARD TO LEDGER (ALLOW)";
+        document.getElementById('verdict-action-text').innerText = "Legitimate organic biometrics. Settled in core banking vault.";
+      }
+    }
+
+    async function verifyActiveChallenge() {
+      if (!activeChallengeId) return;
+      try {
+        const res = await fetch('/v1/mfa/challenge/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challenge_id: activeChallengeId,
+            client_proof: 'webauthn_passkey_verified'
+          })
+        });
+        const data = await res.json();
+        if (res.status === 200) {
+          document.getElementById('mfa-challenge-banner').className = "bg-emerald-950/40 border border-emerald-500/50 rounded-lg p-3 mb-3 block";
+          document.getElementById('mfa-challenge-banner').innerHTML = `<div class="text-emerald-400 font-bold">PASSKEY ASSERTION CONFIRMED</div><div class="text-slate-300 text-xs mt-1">Receipt: ${data.ledger_confirmation_code}</div>`;
+          document.getElementById('verdict-decision-tag').className = "text-base font-bold text-emerald-400";
+          document.getElementById('verdict-decision-tag').innerText = "CHALLENGE VERIFIED & POSTED";
+        }
+      } catch (err) {
+        console.error("Verification error:", err);
+      }
+    }
+
+    async function refreshStats() {
+      try {
+        const res = await fetch('/v1/telemetry/stats');
+        const data = await res.json();
+        document.getElementById('metric-total').innerText = data.total_evaluated.toLocaleString();
+        document.getElementById('metric-blocked').innerText = data.total_blocked.toLocaleString();
+        document.getElementById('metric-block-rate').innerText = `${data.block_rate_percent}%`;
+        document.getElementById('metric-step-up').innerText = data.total_step_up.toLocaleString();
+        document.getElementById('metric-stepup-rate').innerText = `${data.step_up_rate_percent}%`;
+        document.getElementById('metric-saved').innerText = `$${Math.round(data.fraud_dollars_prevented).toLocaleString()}`;
+        document.getElementById('stat-latency').innerText = `< ${data.p99_latency_ms} ms (p99)`;
+
+        if (data.mfa_protocol_distribution) {
+          document.getElementById('mfa-fido-count').innerText = data.mfa_protocol_distribution.FIDO2_WEBAUTHN_BIOMETRIC || 0;
+          document.getElementById('mfa-push-count').innerText = data.mfa_protocol_distribution.APP_PUSH_NOTIFICATION || 0;
+          document.getElementById('mfa-key-count').innerText = data.mfa_protocol_distribution.HARDWARE_SECURITY_KEY || 0;
+          document.getElementById('mfa-sms-count').innerText = data.mfa_protocol_distribution.SMS_OTP || 0;
+        }
+
+        const feedRes = await fetch('/v1/telemetry/feed');
+        const feedData = await feedRes.json();
+        if (feedData && feedData.length > 0) {
+          renderFeedTable(feedData);
+        }
+      } catch (err) {}
+    }
+
+    function renderFeedTable(events) {
+      const tbody = document.getElementById('telemetry-table-body');
+      tbody.innerHTML = '';
+      events.slice(0, 15).forEach(ev => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/60 transition-colors";
+        const dateStr = new Date(ev.timestamp * 1000).toLocaleTimeString();
+        tr.innerHTML = `
+          <td class="py-2.5 px-2 text-slate-500">${dateStr}</td>
+          <td class="py-2.5 px-2 font-bold text-white">${ev.transaction_id.slice(0, 11)}</td>
+          <td class="py-2.5 px-2 font-bold text-white">$${ev.amount.toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-slate-400">${ev.city} <span class="text-[10px] text-slate-600">(${ev.asn_org.slice(0, 12)})</span></td>
+          <td class="py-2.5 px-2 font-bold ${ev.risk_score >= 75 ? 'text-rose-400' : ev.risk_score >= 35 ? 'text-amber-400' : 'text-emerald-400'}">${ev.risk_score}</td>
+          <td class="py-2.5 px-2 font-bold">${ev.decision} <span class="text-[10px] text-amber-400">${ev.challenge_type ? '(' + ev.challenge_type.slice(0, 5) + ')' : ''}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Initialize
+    refreshStats();
+  </script>
+</body>
+</html>

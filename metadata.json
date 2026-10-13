@@ -1,0 +1,6 @@
+{
+  "name": "Aegis-X: Real-Time Edge Security Gateway & ATO Sentinel",
+  "description": "Zero-trust edge security gateway and synthetic fraud/account takeover (ATO) sentinel with geo-velocity checks, behavioral biometrics, and Redis sliding-window telemetry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
