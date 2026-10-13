@@ -16,7 +16,7 @@
 
 *Engineered for Tier-1 Nigerian and African Banking Infrastructure (Finacle, Temenos Transact, Mambu)*
 
-[Live Sandbox Demo](https://aegis-x-q6r3.onrender.com) • [Core Architecture](docs/architecture.md) • [Quickstart Guide](docs/quickstart.md) • [Render Deployment](docs/render-deploy.md) • [Zecathon Alignment](docs/zecathon.md)
+[Live Sandbox Demo](https://aegis-x-q6r3.onrender.com)
 
 ---
 
