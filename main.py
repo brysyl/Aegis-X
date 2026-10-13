@@ -134,8 +134,9 @@ DASHBOARD_HTML = """<!DOCTYPE html>
           <span class="text-slate-600">•</span>
           <span class="text-cyan-400 font-semibold">Lagos-01 Node</span>
         </div>
-        <a href="#sandbox" class="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all">
-          Launch Sandbox
+        <a href="#simulator" onclick="document.getElementById('simulator')?.scrollIntoView({ behavior: 'smooth' }); return false;" class="cursor-pointer px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all flex items-center space-x-1.5 shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] active:scale-95">
+          <span>Launch Sandbox</span>
+          <span class="text-xs">&darr;</span>
         </a>
       </div>
     </div>
@@ -179,7 +180,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
   </section>
 
   <!-- LIVE SIMULATOR SANDBOX -->
-  <section id="sandbox" class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+  <section id="simulator" class="scroll-mt-24 py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-3">
       <div>
         <div class="inline-flex items-center space-x-2 text-cyan-400 font-mono text-xs font-semibold uppercase">

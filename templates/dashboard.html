@@ -132,7 +132,7 @@
 
       <!-- CTA Button -->
       <div class="flex items-center space-x-3">
-        <a href="#simulator" class="relative group px-4.5 py-2 rounded-xl text-xs font-semibold font-mono text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all shadow-lg shadow-cyan-950/40 hover:shadow-cyan-500/20 active:scale-95 flex items-center space-x-2">
+        <a href="#simulator" onclick="document.getElementById('simulator')?.scrollIntoView({ behavior: 'smooth' }); return false;" class="cursor-pointer relative group px-4.5 py-2 rounded-xl text-xs font-semibold font-mono text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all shadow-lg shadow-cyan-950/40 hover:shadow-cyan-500/20 active:scale-95 flex items-center space-x-2">
           <span>Launch Live Demo</span>
           <span class="text-slate-900 transition-transform group-hover:translate-x-0.5">&rarr;</span>
         </a>
