@@ -1,31 +1,39 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="scroll-smooth dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AEGIS-X // Zero-Trust Sentinel Control Room & Dynamic MFA</title>
+  <title>Aegis-X // Real-Time Synthetic Fraud & ATO Sentinel (Zenith Bank Zecathon 6.0)</title>
+  <!-- Tailwind CSS via CDN with custom config -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            mono: ['"Fira Code"', 'monospace'],
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['"Fira Code"', 'Consolas', 'monospace'],
           },
           colors: {
-            cyber: {
-              bg: '#050811',
-              card: '#0a101d',
-              border: '#152238',
-              accent: '#00f0ff',
-              emerald: '#00ff88',
-              rose: '#ff0055',
-              amber: '#ffaa00',
+            brand: {
+              emerald: '#10b981',
+              crimson: '#ef4444',
+              cyan: '#06b6d4',
+              amber: '#f59e0b',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'radar': 'radarSweep 4s linear infinite',
+          },
+          keyframes: {
+            radarSweep: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' },
             }
           }
         }
@@ -34,486 +42,898 @@
   </script>
   <style>
     body {
-      background-color: #050811;
+      background-color: #020617; /* Slate 950 */
       background-image: 
-        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
-        linear-gradient(rgba(21, 34, 56, 0.25) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(21, 34, 56, 0.25) 1px, transparent 1px);
-      background-size: 100% 100%, 32px 32px, 32px 32px;
+        radial-gradient(circle at 50% -10%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at 90% 40%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 10% 70%, rgba(239, 68, 68, 0.05) 0%, transparent 40%),
+        linear-gradient(rgba(30, 41, 59, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30, 41, 59, 0.2) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
     }
-    .neon-glow-cyan {
-      box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+    .glass-card {
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(51, 65, 85, 0.55);
     }
-    .neon-glow-amber {
-      box-shadow: 0 0 15px rgba(255, 170, 0, 0.25);
+    .glass-card:hover {
+      border-color: rgba(6, 182, 212, 0.4);
     }
-    .neon-glow-rose {
-      box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+    .neon-cyan-glow {
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
     }
-    .scanline {
-      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0, 240, 255, 0.03) 50%, rgba(0, 240, 255, 0.03));
-      background-size: 100% 4px;
+    .neon-emerald-glow {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
     }
+    .neon-crimson-glow {
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.25);
+    }
+    /* Syntax highlighter terminal colors */
+    .json-key { color: #38bdf8; }
+    .json-string { color: #34d399; }
+    .json-number { color: #fbbf24; }
+    .json-boolean { color: #c084fc; }
   </style>
 </head>
-<body class="text-slate-200 font-sans min-h-screen flex flex-col p-4 md:p-6 scanline">
+<body class="text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
 
-  <!-- TOP HUD BAR -->
-  <header class="border border-cyber-border bg-cyber-card/90 backdrop-blur-md rounded-xl p-4 mb-6 shadow-2xl flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center space-x-4">
-      <div class="relative w-10 h-10 rounded-lg bg-cyan-950/60 border border-cyan-500/40 flex items-center justify-center neon-glow-cyan">
-        <span class="font-mono font-bold text-cyan-400 text-lg">AX</span>
-        <span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
-        <span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full"></span>
-      </div>
-      <div>
-        <div class="flex items-center space-x-2">
-          <h1 class="text-xl font-bold tracking-wider text-white font-mono uppercase">AEGIS-X SENTINEL</h1>
-          <span class="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">DYNAMIC-MFA-v1.1</span>
-        </div>
-        <p class="text-xs text-slate-400 font-mono">Zero-Trust Real-Time Fraud, Behavioral Biometrics & Dynamic MFA Orchestration</p>
-      </div>
-    </div>
+  <!-- =========================================================================
+       1. NAVIGATION BAR
+       ========================================================================= -->
+  <header class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+      
+      <!-- Brand & Edge Node Status -->
+      <div class="flex items-center space-x-4">
+        <a href="#" class="flex items-center space-x-3 group">
+          <div class="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-500/50 flex items-center justify-center font-mono font-black text-cyan-400 text-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] group-hover:scale-105 transition-transform">
+            AX
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-extrabold text-white text-lg tracking-wider font-mono">AEGIS-X</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                SENTINEL v1.2
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 font-mono hidden sm:block">Synthetic Fraud & ATO Zero-Trust Gateway</p>
+          </div>
+        </a>
 
-    <div class="flex items-center space-x-6 text-xs font-mono">
-      <div class="text-right">
-        <span class="text-slate-400">ENGINE STATE</span>
-        <div class="text-emerald-400 font-bold flex items-center justify-end space-x-1">
-          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-          <span>ONLINE // ARMED</span>
+        <!-- Pulsing Node Indicator -->
+        <div class="hidden md:flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 font-mono text-[11px]">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-slate-300">System Operational</span>
+          <span class="text-slate-600">•</span>
+          <span class="text-cyan-400 font-semibold">Edge Node: Lagos-01</span>
         </div>
       </div>
-      <div class="text-right border-l border-cyber-border pl-4">
-        <span class="text-slate-400">EDGE INTERCEPT</span>
-        <div id="stat-latency" class="text-cyan-400 font-bold">&lt; 7.4 ms (p99)</div>
+
+      <!-- Quick Links -->
+      <nav class="hidden lg:flex items-center space-x-8 text-sm font-medium text-slate-300">
+        <a href="#overview" class="hover:text-cyan-400 transition-colors">Overview</a>
+        <a href="#simulator" class="hover:text-cyan-400 transition-colors flex items-center space-x-1">
+          <span class="text-emerald-400 font-mono text-xs">01.</span>
+          <span>Live Simulator</span>
+        </a>
+        <a href="#control-room" class="hover:text-cyan-400 transition-colors flex items-center space-x-1">
+          <span class="text-cyan-400 font-mono text-xs">02.</span>
+          <span>Control Room</span>
+        </a>
+        <a href="#architecture" class="hover:text-cyan-400 transition-colors flex items-center space-x-1">
+          <span class="text-purple-400 font-mono text-xs">03.</span>
+          <span>Architecture</span>
+        </a>
+      </nav>
+
+      <!-- CTA Button -->
+      <div class="flex items-center space-x-3">
+        <a href="#simulator" class="relative group px-4.5 py-2 rounded-xl text-xs font-semibold font-mono text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all shadow-lg shadow-cyan-950/40 hover:shadow-cyan-500/20 active:scale-95 flex items-center space-x-2">
+          <span>Launch Live Demo</span>
+          <span class="text-slate-900 transition-transform group-hover:translate-x-0.5">&rarr;</span>
+        </a>
       </div>
-      <div class="text-right border-l border-cyber-border pl-4">
-        <span class="text-slate-400">MFA ORCHESTRATOR</span>
-        <div class="text-amber-400 font-bold">NIST-800-63B TIERS</div>
-      </div>
+
     </div>
   </header>
 
-  <!-- METRIC TILES -->
-  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
-      <div class="text-xs font-mono text-slate-400 uppercase">Ingress Evaluated</div>
-      <div id="metric-total" class="text-2xl md:text-3xl font-mono font-extrabold text-white mt-1">1,482</div>
-      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
-        <span>Sliding 60s Window</span>
-        <span class="text-cyan-400">100% Inspected</span>
-      </div>
-    </div>
-
-    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
-      <div class="text-xs font-mono text-rose-400 uppercase">Blocked Fraud</div>
-      <div id="metric-blocked" class="text-2xl md:text-3xl font-mono font-extrabold text-rose-400 mt-1">52</div>
-      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
-        <span>Terminated At Edge</span>
-        <span id="metric-block-rate" class="text-rose-400">3.51%</span>
-      </div>
-    </div>
-
-    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
-      <div class="text-xs font-mono text-amber-400 uppercase">Dynamic MFA Challenges</div>
-      <div id="metric-step-up" class="text-2xl md:text-3xl font-mono font-extrabold text-amber-400 mt-1">119</div>
-      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
-        <span>FIDO2 / Push / YubiKey</span>
-        <span id="metric-stepup-rate" class="text-amber-400">8.03%</span>
-      </div>
-    </div>
-
-    <div class="bg-cyber-card border border-cyber-border rounded-xl p-4 relative overflow-hidden">
-      <div class="text-xs font-mono text-emerald-400 uppercase">Losses Prevented</div>
-      <div id="metric-saved" class="text-2xl md:text-3xl font-mono font-extrabold text-emerald-400 mt-1">$942,800</div>
-      <div class="text-xs text-slate-500 font-mono mt-1 flex items-center justify-between">
-        <span>Core Ledger Shield</span>
-        <span class="text-emerald-400 font-mono">100% Protected</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- DYNAMIC MFA PROTOCOL BREAKDOWN BAR -->
-  <section class="bg-cyber-card border border-cyber-border rounded-xl p-4 mb-6 font-mono text-xs shadow-xl">
-    <div class="flex items-center justify-between pb-2 border-b border-cyber-border mb-3">
-      <div class="flex items-center space-x-2">
-        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-        <span class="text-white font-bold uppercase">Dynamic MFA Protocol Orchestration Distribution</span>
-      </div>
-      <span class="text-slate-400 text-[11px]">Zero-Trust SIM-Swap & Bot Protective Logic</span>
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
-        <div class="text-slate-400 text-[10px]">FIDO2 WEBAUTHN PASSKEY</div>
-        <div id="mfa-fido-count" class="text-lg font-bold text-amber-400 mt-0.5">68</div>
-        <div class="text-[10px] text-slate-500">Tier 2: SIM-Swap & Bio Risk</div>
-      </div>
-      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
-        <div class="text-slate-400 text-[10px]">AUTHENTICATOR PUSH</div>
-        <div id="mfa-push-count" class="text-lg font-bold text-cyan-400 mt-0.5">36</div>
-        <div class="text-[10px] text-slate-500">Tier 1: Standard Consumer</div>
-      </div>
-      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
-        <div class="text-slate-400 text-[10px]">HARDWARE SECURITY KEY</div>
-        <div id="mfa-key-count" class="text-lg font-bold text-purple-400 mt-0.5">12</div>
-        <div class="text-[10px] text-slate-500">Tier 3: Elevated Threat / High $</div>
-      </div>
-      <div class="bg-[#070c16] border border-cyber-border rounded-lg p-2.5">
-        <div class="text-slate-400 text-[10px]">SMS OTP (RESTRICTED)</div>
-        <div id="mfa-sms-count" class="text-lg font-bold text-slate-400 mt-0.5">3</div>
-        <div class="text-[10px] text-rose-500">Disqualified under SIM-swap</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- MAIN OPERATIONAL GRID -->
-  <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+  <!-- =========================================================================
+       2. HERO SECTION
+       ========================================================================= -->
+  <section id="overview" class="relative pt-12 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full overflow-hidden">
     
-    <!-- LEFT: ATTACK SIMULATOR & WORKBENCH (5 cols) -->
-    <div class="lg:col-span-5 flex flex-col space-y-6">
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl">
-        <div class="flex items-center justify-between pb-3 border-b border-cyber-border mb-4">
-          <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-            <h2 class="font-mono text-sm font-bold text-white uppercase tracking-wider">Attack Vector Testbed</h2>
-          </div>
-          <span class="text-xs font-mono text-slate-400">Instant Dispatch</span>
-        </div>
-
-        <!-- PRESET ATTACK BUTTONS -->
-        <div class="grid grid-cols-2 gap-2.5 mb-5 font-mono text-xs">
-          <button onclick="triggerAttack('impossible_traveler')" class="p-3 bg-red-950/30 hover:bg-red-900/40 border border-red-500/40 hover:border-red-400 text-left rounded-lg transition-all group">
-            <div class="text-red-400 font-bold flex items-center justify-between">
-              <span>✈️ IMPOSSIBLE TRAVELER</span>
-              <span class="text-[10px] text-red-500">BLOCK</span>
-            </div>
-            <div class="text-slate-400 text-[11px] mt-1">London -> Tokyo (14,350 km/h)</div>
-          </button>
-
-          <button onclick="triggerAttack('credential_stuffing_bot')" class="p-3 bg-orange-950/30 hover:bg-orange-900/40 border border-orange-500/40 hover:border-orange-400 text-left rounded-lg transition-all group">
-            <div class="text-orange-400 font-bold flex items-center justify-between">
-              <span>🤖 BIO-BOT ATO</span>
-              <span class="text-[10px] text-orange-500">BLOCK</span>
-            </div>
-            <div class="text-slate-400 text-[11px] mt-1">0 Jitter + Instant Scroll Teleport</div>
-          </button>
-
-          <button onclick="triggerAttack('sim_swap')" class="p-3 bg-amber-950/30 hover:bg-amber-900/40 border border-amber-500/40 hover:border-amber-400 text-left rounded-lg transition-all group">
-            <div class="text-amber-400 font-bold flex items-center justify-between">
-              <span>📱 SIM-SWAP + ASN</span>
-              <span class="text-[10px] text-amber-500">STEP-UP</span>
-            </div>
-            <div class="text-slate-400 text-[11px] mt-1">SIM 1.8h ago -> FIDO2 Prompt</div>
-          </button>
-
-          <button onclick="triggerAttack('legit_user')" class="p-3 bg-emerald-950/30 hover:bg-emerald-900/40 border border-emerald-500/40 hover:border-emerald-400 text-left rounded-lg transition-all group">
-            <div class="text-emerald-400 font-bold flex items-center justify-between">
-              <span>🛡️ LEGIT WIRE</span>
-              <span class="text-[10px] text-emerald-500">ALLOW</span>
-            </div>
-            <div class="text-slate-400 text-[11px] mt-1">Organic Jitter + Clean ISP</div>
-          </button>
-        </div>
-
-        <!-- FORM CONTROLS -->
-        <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3.5 space-y-3 font-mono text-xs">
-          <div class="text-slate-300 font-bold flex items-center justify-between pb-1 border-b border-cyber-border/60">
-            <span>TRANSACTION PAYLOAD INSPECTOR</span>
-            <span class="text-cyan-400">/v1/ledger/transfer</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[10px] text-slate-500">TRANSFER AMOUNT ($)</label>
-              <input id="input-amount" type="number" value="12500" class="w-full bg-cyber-card border border-cyber-border rounded px-2.5 py-1 text-white">
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-500">USER ID</label>
-              <input id="input-userid" type="text" value="usr_apex_8912" class="w-full bg-cyber-card border border-cyber-border rounded px-2.5 py-1 text-white">
-            </div>
-          </div>
-
-          <button onclick="triggerAttack('sim_swap')" class="w-full py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded flex items-center justify-center space-x-2 transition-all">
-            <span>DISPATCH & ORCHESTRATE MFA</span>
-            <span>&rarr;</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- LAST VERDICT DISPLAY -->
-      <div id="verdict-card" class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl font-mono text-xs">
-        <div class="flex items-center justify-between pb-2 border-b border-cyber-border mb-3">
-          <span class="text-slate-400">EDGE GATEWAY VERDICT</span>
-          <span id="verdict-latency" class="text-cyan-400">-- ms</span>
-        </div>
-        
-        <div class="flex items-center space-x-4 mb-4">
-          <div id="verdict-score-badge" class="w-16 h-16 rounded-xl border border-cyan-500/40 bg-cyan-950/40 flex flex-col items-center justify-center">
-            <span class="text-[10px] text-slate-400">RISK</span>
-            <span id="verdict-score-val" class="font-mono text-2xl font-black text-cyan-400">--</span>
-          </div>
-          <div>
-            <div id="verdict-decision-tag" class="text-base font-bold text-white">WAITING FOR INGRESS</div>
-            <div id="verdict-action-text" class="text-slate-400 mt-0.5">Select a test vector to trigger inspection.</div>
-          </div>
-        </div>
-
-        <div id="mfa-challenge-banner" class="hidden bg-amber-950/40 border border-amber-500/50 rounded-lg p-3 mb-3">
-          <div class="text-amber-400 font-bold flex items-center justify-between">
-            <span>MFA CHALLENGE DISPATCHED</span>
-            <span id="mfa-banner-id" class="text-[10px] text-slate-400">mfa_xxxx</span>
-          </div>
-          <div id="mfa-banner-instruction" class="text-slate-300 text-[11px] mt-1">Authenticate via FIDO2 Passkey</div>
-          <button onclick="verifyActiveChallenge()" class="mt-2 w-full py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded text-xs transition-colors">
-            Confirm FIDO2 Biometric Proof
-          </button>
-        </div>
-
-        <div id="verdict-tags-container" class="flex flex-wrap gap-1.5 text-[10px]">
-          <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
-        </div>
+    <!-- Top Hackathon Badge -->
+    <div class="flex justify-center mb-6">
+      <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs font-mono text-slate-300 shadow-xl">
+        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+        <span class="text-red-400 font-bold">Zenith Bank Zecathon 6.0</span>
+        <span class="text-slate-600">|</span>
+        <span class="text-cyan-400">Core Banking Security Track</span>
       </div>
     </div>
 
-    <!-- RIGHT: ADVANCED BIOMETRICS RADAR & TELEMETRY STREAM (7 cols) -->
-    <div class="lg:col-span-7 flex flex-col space-y-6">
-      
-      <!-- ADVANCED BEHAVIORAL BIOMETRICS RADAR -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl font-mono text-xs">
-        <div class="flex items-center justify-between pb-3 border-b border-cyber-border mb-4">
-          <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Advanced Behavioral Biometrics Radar</h2>
-          </div>
-          <span class="text-slate-400">5-Layer Analysis</span>
+    <!-- Main Headline & Subtitle -->
+    <div class="text-center max-w-4xl mx-auto space-y-6">
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.1]">
+        Intercept Fraud <br class="hidden sm:inline" />
+        <span class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
+          Before It Touches
+        </span> The Core Ledger.
+      </h1>
+
+      <p class="text-base sm:text-xl text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed">
+        Zero-Trust Synthetic Fraud & Account Takeover Sentinel engineered for Tier-1 African banking infrastructure. Sub-15ms edge telemetry evaluation with spherical geo-velocity, keystroke dynamics, and Telco SIM-swap defense.
+      </p>
+
+      <!-- Dual CTAs -->
+      <div class="flex flex-wrap items-center justify-center gap-4 pt-3">
+        <a href="#simulator" class="px-6 py-3.5 rounded-xl font-mono text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 transition-all shadow-xl shadow-emerald-950/50 flex items-center space-x-2">
+          <span>⚡ Test Transaction Sandbox</span>
+        </a>
+        <a href="#architecture" class="px-6 py-3.5 rounded-xl font-mono text-sm font-semibold text-slate-300 hover:text-white glass-card hover:bg-slate-800 transition-all flex items-center space-x-2">
+          <span>View System Architecture</span>
+          <span class="text-slate-500">&darr;</span>
+        </a>
+      </div>
+
+      <!-- Trust Badges -->
+      <div class="pt-10 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto text-left">
+        <div class="glass-card rounded-xl p-3.5 border-l-2 border-l-cyan-400">
+          <div class="text-[11px] font-mono text-slate-400">EDGE INTERCEPT</div>
+          <div class="text-lg font-bold font-mono text-white mt-0.5">&lt; 15ms Latency</div>
+          <p class="text-[11px] text-slate-400 mt-1">Zero ledger performance degradation</p>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400">MOUSE JITTER ENTROPY</div>
-            <div id="radar-mouse-val" class="text-emerald-400 font-bold text-base mt-1">0.72 H</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Organic Micro-tremor</div>
+        <div class="glass-card rounded-xl p-3.5 border-l-2 border-l-emerald-400">
+          <div class="text-[11px] font-mono text-slate-400">PRE-LEDGER GATEWAY</div>
+          <div class="text-lg font-bold font-mono text-white mt-0.5">Pre-Debit Drop</div>
+          <p class="text-[11px] text-slate-400 mt-1">Blocks ATO before balance mutation</p>
+        </div>
+
+        <div class="glass-card rounded-xl p-3.5 border-l-2 border-l-amber-400">
+          <div class="text-[11px] font-mono text-slate-400">REGULATORY STANDARDS</div>
+          <div class="text-lg font-bold font-mono text-white mt-0.5">CBN Aligned</div>
+          <p class="text-[11px] text-slate-400 mt-1">Central Bank of Nigeria 2FA / NDPR</p>
+        </div>
+
+        <div class="glass-card rounded-xl p-3.5 border-l-2 border-l-purple-400">
+          <div class="text-[11px] font-mono text-slate-400">INFRASTRUCTURE</div>
+          <div class="text-lg font-bold font-mono text-white mt-0.5">Cloud Run / Redis</div>
+          <p class="text-[11px] text-slate-400 mt-1">Sliding window log state caching</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       3. INTERACTIVE LIVE SIMULATOR SANDBOX (KILLER DEMO FEATURE)
+       ========================================================================= -->
+  <section id="simulator" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <div class="border-t border-slate-800/80 pt-12">
+      
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="inline-flex items-center space-x-2 text-cyan-400 font-mono text-xs font-semibold uppercase tracking-wider mb-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>Interactive Judge Evaluation Workbench</span>
           </div>
-          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400">SCROLL KINETICS</div>
-            <div id="radar-scroll-val" class="text-emerald-400 font-bold text-base mt-1">145.0 &sigma;&sup2;</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Inertial Deceleration</div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Live Simulator Sandbox
+          </h2>
+          <p class="text-slate-400 text-sm mt-1 max-w-xl">
+            Dispatch synthetic transaction payloads directly to Aegis-X to witness real-time zero-trust edge evaluation, heuristic rule firing, and sub-15ms mitigation.
+          </p>
+        </div>
+
+        <!-- Quick Scenario Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-mono text-slate-400 mr-1">PRESET SCENARIOS:</span>
+          <button onclick="loadScenario('legit')" class="px-3 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-semibold transition-all">
+            🛡️ Legitimate Transfer
+          </button>
+          <button onclick="loadScenario('sim_swap')" class="px-3 py-1.5 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 text-amber-300 font-mono text-xs font-semibold transition-all">
+            📱 SIM-Swap Attack
+          </button>
+          <button onclick="loadScenario('geo_velocity')" class="px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 font-mono text-xs font-semibold transition-all">
+            ✈️ Geo-Velocity Anomaly
+          </button>
+        </div>
+      </div>
+
+      <!-- Sandbox Grid: Left Form, Right Real-Time Terminal -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- LEFT: Transaction Payload Builder (5 cols) -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-6 shadow-2xl relative">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4 font-mono text-xs">
+            <span class="text-white font-bold flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              <span>PAYLOAD CONFIGURATOR</span>
+            </span>
+            <span class="text-cyan-400">POST /api/v1/evaluate</span>
           </div>
-          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400">CLICK PRESSURE</div>
-            <div id="radar-click-val" class="text-emerald-400 font-bold text-base mt-1">0.08 &sigma;&sup2;</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Physical Pointer</div>
+
+          <form id="sandbox-form" onsubmit="executeTransaction(event)" class="space-y-4 text-xs font-mono">
+            
+            <!-- Account ID & Amount (₦) -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-slate-400 block mb-1">ACCOUNT ID</label>
+                <input id="field-accountId" type="text" value="ACC-ZENITH-882910" required
+                       class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">AMOUNT (₦ NAIRA)</label>
+                <input id="field-amount" type="number" value="45000" min="100" required
+                       class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-emerald-400 font-bold focus:outline-none focus:border-cyan-400">
+              </div>
+            </div>
+
+            <!-- Device ID & User ID -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-slate-400 block mb-1">DEVICE HASH / ID</label>
+                <input id="field-deviceId" type="text" value="dev_macbook_lagos_v1" required
+                       class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">USER IDENTIFIER</label>
+                <input id="field-userId" type="text" value="usr_chidi_9921" required
+                       class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+              </div>
+            </div>
+
+            <!-- Geo-Location (City, Lat, Lon) -->
+            <div>
+              <label class="text-slate-400 block mb-1">GEOGRAPHIC LOCATION (IP INGRESS)</label>
+              <div class="grid grid-cols-3 gap-2">
+                <input id="field-city" type="text" value="Lagos, Nigeria" placeholder="City"
+                       class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-white focus:outline-none focus:border-cyan-400">
+                <input id="field-lat" type="number" step="0.0001" value="6.5244" placeholder="Latitude"
+                       class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-slate-300 focus:outline-none focus:border-cyan-400">
+                <input id="field-lon" type="number" step="0.0001" value="3.3792" placeholder="Longitude"
+                       class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-slate-300 focus:outline-none focus:border-cyan-400">
+              </div>
+            </div>
+
+            <!-- Behavioral Biometrics & Telco Toggles -->
+            <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-white font-medium block">Behavioral Velocity Jitter</span>
+                  <span class="text-[10px] text-slate-400">Human typing cadence (&sigma;&sup2; &gt; 25ms) vs Bot script (0ms)</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input id="field-organicCadence" type="checkbox" checked class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <div>
+                  <span class="text-white font-medium block">Telco SIM-Swap Recency</span>
+                  <span class="text-[10px] text-slate-400">IMSI re-provisioned &lt; 72 hours ago</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input id="field-simSwapActive" type="checkbox" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Execute Button -->
+            <button id="btn-execute-payload" type="submit"
+                    class="w-full py-3.5 px-4 rounded-xl font-mono text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all shadow-xl shadow-cyan-950/50 active:scale-[0.98] flex items-center justify-center space-x-2">
+              <span id="btn-execute-spinner" class="hidden w-3.5 h-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
+              <span id="btn-execute-text">EXECUTE TRANSACTION PAYLOAD</span>
+              <span>&rarr;</span>
+            </button>
+
+          </form>
+        </div>
+
+        <!-- RIGHT: Real-Time Result Terminal & Verdict Card (7 cols) -->
+        <div class="lg:col-span-7 space-y-5">
+          
+          <!-- Primary Verdict Badge Card -->
+          <div id="verdict-banner" class="glass-card rounded-2xl p-6 border-l-4 border-l-emerald-400 transition-all">
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800 font-mono text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="text-slate-400">EVALUATION VERDICT:</span>
+                <span id="verdict-tx-id" class="text-white font-bold">TX-STANDBY-INIT</span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <span class="text-slate-400">EDGE PROCESSING:</span>
+                <span id="verdict-latency-val" class="text-cyan-400 font-bold">6.8 ms (p99)</span>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4">
+              <div class="flex items-center space-x-5">
+                <!-- Large Score Badge -->
+                <div id="verdict-score-box" class="w-20 h-20 rounded-2xl bg-emerald-950/60 border border-emerald-500 flex flex-col items-center justify-center font-mono neon-emerald-glow">
+                  <span class="text-[10px] text-slate-400">RISK</span>
+                  <span id="verdict-score-num" class="text-3xl font-black text-emerald-400">12.0</span>
+                  <span class="text-[9px] text-slate-400">/ 100</span>
+                </div>
+
+                <div>
+                  <div id="verdict-decision-text" class="text-xl sm:text-2xl font-mono font-black text-emerald-400 tracking-wide">
+                    FORWARD TO CORE LEDGER (ALLOW)
+                  </div>
+                  <div id="verdict-recommendation" class="text-xs text-slate-300 font-mono mt-1">
+                    Safe retail transfer. Pre-ledger debit authorized for Zenith Core Banking Vault.
+                  </div>
+                  <div id="verdict-details-strip" class="text-[11px] text-slate-400 font-mono mt-1">
+                    Amount: <span id="verdict-amount-label" class="text-white font-bold">₦45,000</span> | Account: <span id="verdict-acc-label" class="text-cyan-400 font-bold">ACC-ZENITH-882910</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Triggered Rules Tag Bar -->
+            <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center gap-2 font-mono text-[11px]">
+              <span class="text-slate-500 font-semibold">TRIGGERED RULES:</span>
+              <div id="verdict-rules-container" class="flex flex-wrap gap-1.5">
+                <span class="px-2.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-emerald-300">TRUSTED_DEVICE_HASH</span>
+                <span class="px-2.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300">ORGANIC_TYPING_CADENCE</span>
+                <span class="px-2.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">LAGOS_RESIDENTIAL_ASN</span>
+              </div>
+            </div>
           </div>
-          <div class="bg-[#070c16] border border-cyber-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400">ELEMENT HOVER DWELL</div>
-            <div id="radar-hover-val" class="text-emerald-400 font-bold text-base mt-1">340 ms</div>
-            <div class="text-[10px] text-slate-500 mt-0.5">Human Pre-click Pause</div>
+
+          <!-- Real-Time Result Terminal (JSON Stream) -->
+          <div class="glass-card rounded-2xl overflow-hidden shadow-2xl font-mono text-xs">
+            <div class="bg-slate-950 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                <span class="text-slate-400 text-xs ml-2 font-semibold">AEGIS-X EDGE GATEWAY STREAM // JSON TELEMETRY</span>
+              </div>
+              <button onclick="copyTerminalJson()" class="text-slate-400 hover:text-cyan-400 transition-colors text-[11px] flex items-center space-x-1">
+                <span id="copy-text">Copy JSON</span>
+              </button>
+            </div>
+
+            <div class="p-4 sm:p-5 bg-slate-950/90 overflow-x-auto max-h-[300px] leading-relaxed">
+              <pre id="json-terminal-output" class="text-slate-300 selection:bg-cyan-500/30"><code>{
+  "transaction_id": "tx_aec882910fa",
+  "status": "EVALUATED_AT_EDGE",
+  "risk_score": 12.0,
+  "decision": "ALLOW",
+  "processing_latency_ms": 6.8,
+  "recommended_action": "FORWARD_TO_CORE_BANKING_LEDGER",
+  "forensic_tags": [
+    "TRUSTED_DEVICE_HASH",
+    "ORGANIC_TYPING_CADENCE",
+    "LAGOS_RESIDENTIAL_ASN"
+  ],
+  "factors": {
+    "geo_velocity": { "score": 5.0, "speed_kmh": 0.0, "status": "LOCAL_STATIONARY" },
+    "behavioral_biometrics": { "score": 10.0, "flight_variance_ms": 32.5, "status": "HUMAN_ORGANIC" },
+    "network_telco": { "score": 8.0, "sim_swap_hours": null, "status": "CLEAN_RESIDENTIAL_ISP" }
+  }
+}</code></pre>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       4. LIVE TELEMETRY CONTROL ROOM (DASHBOARD)
+       ========================================================================= -->
+  <section id="control-room" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <div class="border-t border-slate-800/80 pt-12">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="inline-flex items-center space-x-2 text-emerald-400 font-mono text-xs font-semibold uppercase tracking-wider mb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Real-Time Bank Operations HUD</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Live Telemetry Control Room
+          </h2>
+          <p class="text-slate-400 text-sm mt-1 max-w-xl">
+            Real-time streaming ledger telemetry, threat aggregation, and sliding-window rate limit monitoring.
+          </p>
+        </div>
+
+        <div class="flex items-center space-x-3 font-mono text-xs">
+          <div class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>SLIDING 60s WINDOW: ACTIVE</span>
           </div>
         </div>
       </div>
 
-      <!-- LIVE TELEMETRY STREAM TABLE -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 shadow-xl flex-1 flex flex-col font-mono text-xs">
-        <div class="flex items-center justify-between pb-3 border-b border-cyber-border mb-3">
+      <!-- Real-Time Stat Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+          <div class="text-slate-400 font-mono text-xs uppercase">Total Transactions Scanned</div>
+          <div id="stat-scanned-count" class="text-2xl sm:text-3xl font-mono font-extrabold text-white mt-1">1,492,040</div>
+          <div class="text-[11px] text-cyan-400 font-mono mt-2 flex items-center justify-between">
+            <span>Edge Layer 7 Ingress</span>
+            <span>+142 / min</span>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+          <div class="text-rose-400 font-mono text-xs uppercase">Fraud Intercepted (₦)</div>
+          <div id="stat-fraud-naira" class="text-2xl sm:text-3xl font-mono font-extrabold text-rose-400 mt-1">₦428,500,000</div>
+          <div class="text-[11px] text-slate-400 font-mono mt-2 flex items-center justify-between">
+            <span>Averted Core Loss</span>
+            <span class="text-rose-400 font-bold">100% Pre-Debit</span>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+          <div class="text-cyan-400 font-mono text-xs uppercase">Average Edge Latency</div>
+          <div id="stat-avg-latency" class="text-2xl sm:text-3xl font-mono font-extrabold text-cyan-400 mt-1">7.2 ms</div>
+          <div class="text-[11px] text-slate-400 font-mono mt-2 flex items-center justify-between">
+            <span>p99 Sliced Window</span>
+            <span class="text-emerald-400 font-bold">&lt; 15ms Target</span>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+          <div class="text-emerald-400 font-mono text-xs uppercase">Active Sliding Sessions</div>
+          <div id="stat-active-sessions" class="text-2xl sm:text-3xl font-mono font-extrabold text-emerald-400 mt-1">18,420</div>
+          <div class="text-[11px] text-slate-400 font-mono mt-2 flex items-center justify-between">
+            <span>Redis Sorted Set Logs</span>
+            <span class="text-cyan-400 font-bold">Zero-Lock</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Streaming Feed Table -->
+      <div class="glass-card rounded-2xl overflow-hidden shadow-2xl font-mono text-xs">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
           <div class="flex items-center space-x-2">
             <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Live Edge Telemetry Ingress</h2>
+            <span class="font-bold text-white uppercase">Live Telemetry Event Feed</span>
           </div>
-          <button onclick="refreshStats()" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Refresh</button>
+          <div class="text-[11px] text-slate-400">
+            Auto-refreshing stream (simulated / live WebSocket)
+          </div>
         </div>
 
-        <div class="overflow-x-auto flex-1 max-h-[360px]">
+        <div class="overflow-x-auto max-h-[380px]">
           <table class="w-full text-left">
-            <thead>
-              <tr class="text-slate-500 border-b border-cyber-border text-[11px]">
-                <th class="py-2 px-2">TIME</th>
-                <th class="py-2 px-2">TX ID</th>
-                <th class="py-2 px-2">AMOUNT</th>
-                <th class="py-2 px-2">GEO / ASN</th>
-                <th class="py-2 px-2">RISK</th>
-                <th class="py-2 px-2">VERDICT / MFA</th>
+            <thead class="bg-slate-950/90 text-slate-400 text-[11px] border-b border-slate-800 sticky top-0">
+              <tr>
+                <th class="py-2.5 px-3">TIMESTAMP</th>
+                <th class="py-2.5 px-3">TRANSACTION ID</th>
+                <th class="py-2.5 px-3">ACCOUNT</th>
+                <th class="py-2.5 px-3">AMOUNT</th>
+                <th class="py-2.5 px-3">LOCATION / ASN</th>
+                <th class="py-2.5 px-3">RISK SCORE</th>
+                <th class="py-2.5 px-3">DECISION</th>
               </tr>
             </thead>
-            <tbody id="telemetry-table-body" class="divide-y divide-cyber-border/40 text-slate-300">
+            <tbody id="telemetry-table-body" class="divide-y divide-slate-800/60 text-slate-300 text-[11px]">
               <!-- Dynamically populated rows -->
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
-  </main>
+  </section>
 
+  <!-- =========================================================================
+       5. SYSTEM ARCHITECTURE
+       ========================================================================= -->
+  <section id="architecture" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <div class="border-t border-slate-800/80 pt-12">
+      
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <div class="inline-flex items-center space-x-2 text-purple-400 font-mono text-xs font-semibold uppercase tracking-wider mb-2">
+          <span>Tier-1 Banking Security Pipeline</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Zero-Trust Edge Architecture
+        </h2>
+        <p class="text-slate-400 text-sm mt-2">
+          Placed inline at the API Gateway layer (Apigee / Envoy / Cloud Endpoints), Aegis-X intercepts every transaction before funds debit or credit.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        
+        <div class="glass-card rounded-2xl p-5 relative border-t-2 border-t-cyan-400">
+          <div class="text-[10px] font-mono text-cyan-400 font-bold mb-1">STAGE 01</div>
+          <h3 class="text-base font-bold text-white mb-2">Edge Ingress Interceptor</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            FastAPI reverse proxy intercepts inbound Layer 7 payloads, extracts headers, and records correlation trace IDs.
+          </p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative border-t-2 border-t-teal-400">
+          <div class="text-[10px] font-mono text-teal-400 font-bold mb-1">STAGE 02</div>
+          <h3 class="text-base font-bold text-white mb-2">Redis Sliding Window</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Atomic sorted sets (`ZADD`, `ZCARD`) evaluate transaction velocity per account and card in &lt;1.5ms.
+          </p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative border-t-2 border-t-purple-400">
+          <div class="text-[10px] font-mono text-purple-400 font-bold mb-1">STAGE 03</div>
+          <h3 class="text-base font-bold text-white mb-2">Multi-Heuristic Sentinel</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Haversine geo-velocity (&gt;920 km/h impossible traveler), keystroke dynamics jitter, and Telco SIM-swap recency heuristics.
+          </p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 relative border-t-2 border-t-emerald-400">
+          <div class="text-[10px] font-mono text-emerald-400 font-bold mb-1">STAGE 04</div>
+          <h3 class="text-base font-bold text-white mb-2">Decision Routing Engine</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            ALLOW &rarr; Immediate ledger settlement; STEP-UP &rarr; FIDO2 passkey challenge; BLOCK &rarr; Zero-trust edge drop.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       6. FOOTER
+       ========================================================================= -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-8 px-4 sm:px-6 lg:px-8 mt-auto text-xs font-mono text-slate-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-6 h-6 rounded-md bg-cyan-950 border border-cyan-500/40 flex items-center justify-center font-bold text-cyan-400 text-xs">
+          AX
+        </div>
+        <span class="text-slate-300 font-semibold">Built for Zenith Bank Zecathon 6.0 | Aegis-X Core Security Engine</span>
+      </div>
+      <div class="flex items-center space-x-6 text-[11px] text-slate-500">
+        <span>Zero-Trust Architecture</span>
+        <span>•</span>
+        <span>Lagos-01 Edge Node</span>
+        <span>•</span>
+        <span>CBN Regulatory Aligned</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       VANILLA JAVASCRIPT LOGIC & API INTEGRATION
+       ========================================================================= -->
   <script>
-    let activeChallengeId = null;
-    let recentEvents = [];
-
-    async function triggerAttack(type) {
-      let payload;
-      if (type === 'impossible_traveler') {
-        payload = {
-          user_id: "usr_london_vip_441",
-          account_id: "acc_9921_uk",
-          amount: 25000.0,
-          destination_account: "acc_ext_tokyo_atm",
-          geo: { latitude: 35.6762, longitude: 139.6503, city: "Tokyo", country_code: "JP" },
-          device: { fingerprint_hash: "hash_iphone15_known", user_agent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)", screen_resolution: "390x844" },
-          biometrics: { keystroke_flight_mean_ms: 120.0, keystroke_flight_variance_ms: 22.0, keystroke_dwell_mean_ms: 85.0, keystroke_dwell_variance_ms: 14.0, mouse_curvature_score: 0.8, mouse_jitter_entropy: 0.75, interaction_time_ms: 3800.0 },
-          network: { client_ip: "153.120.88.14", asn_number: 2516, asn_organization: "KDDI Corp", is_datacenter_or_proxy: false }
-        };
-      } else if (type === 'credential_stuffing_bot') {
-        payload = {
-          user_id: "usr_victim_772",
-          account_id: "acc_6120_us",
-          amount: 8200.0,
-          destination_account: "acc_crypto_mule_88",
-          geo: { latitude: 51.5074, longitude: -0.1278, city: "London", country_code: "GB" },
-          device: { fingerprint_hash: "hash_bot_puppeteer_v1", user_agent: "Mozilla/5.0 HeadlessChrome/122.0", is_webdriver: true, screen_resolution: "800x600", webgl_vendor: "Google SwiftShader" },
-          biometrics: { keystroke_flight_mean_ms: 10.0, keystroke_flight_variance_ms: 0.0, keystroke_dwell_mean_ms: 20.0, keystroke_dwell_variance_ms: 0.0, mouse_curvature_score: 0.02, mouse_jitter_entropy: 0.04, mouse_velocity_spikes: 3, scroll_velocity_mean_px_s: 0.0, scroll_velocity_variance: 0.0, is_instant_scroll_teleport: true, click_pressure_mean: 0.0, click_pressure_variance: 0.0, interaction_time_ms: 180.0, ui_element_focus_dwell_ms: { submit_button_hover: 0.0 } },
-          network: { client_ip: "185.220.101.5", asn_number: 9009, asn_organization: "M247 Proxy", is_datacenter_or_proxy: true, is_tor_exit_node: true }
-        };
-      } else if (type === 'sim_swap') {
-        payload = {
-          user_id: "usr_wealth_991",
-          account_id: "acc_8819_us",
-          amount: 14500.0,
-          destination_account: "acc_wire_offshore",
-          geo: { latitude: 37.7749, longitude: -122.4194, city: "San Francisco", country_code: "US" },
-          device: { fingerprint_hash: "hash_new_android_device_unknown", user_agent: "Mozilla/5.0 (Linux; Android 14)", screen_resolution: "1080x2400" },
-          biometrics: { keystroke_flight_mean_ms: 95.0, keystroke_flight_variance_ms: 18.0, keystroke_dwell_mean_ms: 70.0, keystroke_dwell_variance_ms: 12.0, mouse_curvature_score: 0.65, mouse_jitter_entropy: 0.58, interaction_time_ms: 4100.0 },
-          network: { client_ip: "162.243.10.4", asn_number: 14061, asn_organization: "DigitalOcean LLC", is_datacenter_or_proxy: true, sim_swap_age_hours: 1.8 }
-        };
-      } else {
-        payload = {
-          user_id: "usr_verified_220",
-          account_id: "acc_primary_checking",
-          amount: 650.0,
-          destination_account: "acc_utility_corp",
-          geo: { latitude: 40.7128, longitude: -74.0060, city: "New York", country_code: "US" },
-          device: { fingerprint_hash: "hash_macbook_pro_m2_known", user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", screen_resolution: "1920x1080" },
-          biometrics: { keystroke_flight_mean_ms: 145.0, keystroke_flight_variance_ms: 38.0, keystroke_dwell_mean_ms: 88.0, keystroke_dwell_variance_ms: 16.0, mouse_curvature_score: 0.78, mouse_jitter_entropy: 0.72, scroll_velocity_mean_px_s: 380.0, scroll_velocity_variance: 160.0, click_pressure_mean: 0.55, click_pressure_variance: 0.08, interaction_time_ms: 3400.0, ui_element_focus_dwell_ms: { submit_button_hover: 320.0 } },
-          network: { client_ip: "72.229.28.18", asn_number: 7922, asn_organization: "Comcast Residential", is_datacenter_or_proxy: false }
-        };
+    // Live Feed Simulation State
+    let feedEvents = [
+      {
+        id: "TX-ZENITH-99120",
+        timestamp: "Just now",
+        account: "ACC-ZENITH-882910",
+        amount: 45000,
+        location: "Lagos, NG",
+        asn: "MTN Nigeria",
+        score: 12.0,
+        decision: "ALLOW"
+      },
+      {
+        id: "TX-ZENITH-99119",
+        timestamp: "28s ago",
+        account: "ACC-ZENITH-110482",
+        amount: 1850000,
+        location: "Abuja, NG",
+        asn: "DigitalOcean Proxy",
+        score: 68.5,
+        decision: "STEP_UP_CHALLENGE"
+      },
+      {
+        id: "TX-ZENITH-99118",
+        timestamp: "1m ago",
+        account: "ACC-ZENITH-440192",
+        amount: 4500000,
+        location: "London, UK",
+        asn: "M247 Tor Exit",
+        score: 97.5,
+        decision: "BLOCK"
+      },
+      {
+        id: "TX-ZENITH-99117",
+        timestamp: "2m ago",
+        account: "ACC-ZENITH-772911",
+        amount: 85000,
+        location: "Port Harcourt, NG",
+        asn: "Airtel Nigeria",
+        score: 14.5,
+        decision: "ALLOW"
       }
+    ];
 
-      try {
-        const res = await fetch('/v1/ledger/transfer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        renderVerdict(data, res.status);
-        refreshStats();
-      } catch (err) {
-        console.error("Evaluation error:", err);
-      }
-    }
-
-    function renderVerdict(data, status) {
-      const banner = document.getElementById('mfa-challenge-banner');
-      if (status === 428) {
-        banner.className = "bg-amber-950/40 border border-amber-500/50 rounded-lg p-3 mb-3 block neon-glow-amber";
-        document.getElementById('mfa-banner-id').innerText = data.challenge_id || 'CHALLENGE_REQUIRED';
-        document.getElementById('mfa-banner-instruction').innerText = data.instructions || 'FIDO2 Passkey Verification';
-        activeChallengeId = data.challenge_id;
-
-        document.getElementById('verdict-score-badge').className = "w-16 h-16 rounded-xl border border-amber-500/60 bg-amber-950/60 flex flex-col items-center justify-center";
-        document.getElementById('verdict-score-val').className = "font-mono text-2xl font-black text-amber-400";
-        document.getElementById('verdict-score-val').innerText = data.risk_score;
-        document.getElementById('verdict-decision-tag').className = "text-base font-bold text-amber-400";
-        document.getElementById('verdict-decision-tag').innerText = `STEP-UP REQUIRED [${data.protocol || 'FIDO2'}]`;
-        document.getElementById('verdict-action-text').innerText = "Dynamic MFA challenge generated. SMS revoked due to SIM threat.";
-      } else if (status === 403) {
-        banner.className = "hidden";
-        document.getElementById('verdict-score-badge').className = "w-16 h-16 rounded-xl border border-rose-500/60 bg-rose-950/60 flex flex-col items-center justify-center neon-glow-rose";
-        document.getElementById('verdict-score-val').className = "font-mono text-2xl font-black text-rose-400";
-        document.getElementById('verdict-score-val').innerText = data.risk_score;
-        document.getElementById('verdict-decision-tag').className = "text-base font-bold text-rose-400";
-        document.getElementById('verdict-decision-tag').innerText = "TERMINATED AT EDGE (BLOCK)";
-        document.getElementById('verdict-action-text').innerText = "Zero-trust policy tripped. Core banking ledger shielded.";
-      } else {
-        banner.className = "hidden";
-        document.getElementById('verdict-score-badge').className = "w-16 h-16 rounded-xl border border-emerald-500/60 bg-emerald-950/60 flex flex-col items-center justify-center";
-        document.getElementById('verdict-score-val').className = "font-mono text-2xl font-black text-emerald-400";
-        document.getElementById('verdict-score-val').innerText = data.aegis_verdict ? data.aegis_verdict.risk_score : 12;
-        document.getElementById('verdict-decision-tag').className = "text-base font-bold text-emerald-400";
-        document.getElementById('verdict-decision-tag').innerText = "FORWARD TO LEDGER (ALLOW)";
-        document.getElementById('verdict-action-text').innerText = "Legitimate organic biometrics. Settled in core banking vault.";
-      }
-    }
-
-    async function verifyActiveChallenge() {
-      if (!activeChallengeId) return;
-      try {
-        const res = await fetch('/v1/mfa/challenge/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            challenge_id: activeChallengeId,
-            client_proof: 'webauthn_passkey_verified'
-          })
-        });
-        const data = await res.json();
-        if (res.status === 200) {
-          document.getElementById('mfa-challenge-banner').className = "bg-emerald-950/40 border border-emerald-500/50 rounded-lg p-3 mb-3 block";
-          document.getElementById('mfa-challenge-banner').innerHTML = `<div class="text-emerald-400 font-bold">PASSKEY ASSERTION CONFIRMED</div><div class="text-slate-300 text-xs mt-1">Receipt: ${data.ledger_confirmation_code}</div>`;
-          document.getElementById('verdict-decision-tag').className = "text-base font-bold text-emerald-400";
-          document.getElementById('verdict-decision-tag').innerText = "CHALLENGE VERIFIED & POSTED";
-        }
-      } catch (err) {
-        console.error("Verification error:", err);
-      }
-    }
-
-    async function refreshStats() {
-      try {
-        const res = await fetch('/v1/telemetry/stats');
-        const data = await res.json();
-        document.getElementById('metric-total').innerText = data.total_evaluated.toLocaleString();
-        document.getElementById('metric-blocked').innerText = data.total_blocked.toLocaleString();
-        document.getElementById('metric-block-rate').innerText = `${data.block_rate_percent}%`;
-        document.getElementById('metric-step-up').innerText = data.total_step_up.toLocaleString();
-        document.getElementById('metric-stepup-rate').innerText = `${data.step_up_rate_percent}%`;
-        document.getElementById('metric-saved').innerText = `$${Math.round(data.fraud_dollars_prevented).toLocaleString()}`;
-        document.getElementById('stat-latency').innerText = `< ${data.p99_latency_ms} ms (p99)`;
-
-        if (data.mfa_protocol_distribution) {
-          document.getElementById('mfa-fido-count').innerText = data.mfa_protocol_distribution.FIDO2_WEBAUTHN_BIOMETRIC || 0;
-          document.getElementById('mfa-push-count').innerText = data.mfa_protocol_distribution.APP_PUSH_NOTIFICATION || 0;
-          document.getElementById('mfa-key-count').innerText = data.mfa_protocol_distribution.HARDWARE_SECURITY_KEY || 0;
-          document.getElementById('mfa-sms-count').innerText = data.mfa_protocol_distribution.SMS_OTP || 0;
-        }
-
-        const feedRes = await fetch('/v1/telemetry/feed');
-        const feedData = await feedRes.json();
-        if (feedData && feedData.length > 0) {
-          renderFeedTable(feedData);
-        }
-      } catch (err) {}
-    }
-
-    function renderFeedTable(events) {
+    function renderFeedTable() {
       const tbody = document.getElementById('telemetry-table-body');
       tbody.innerHTML = '';
-      events.slice(0, 15).forEach(ev => {
+      feedEvents.forEach(ev => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-900/60 transition-colors";
-        const dateStr = new Date(ev.timestamp * 1000).toLocaleTimeString();
+        
+        let decisionBadge = '';
+        if (ev.decision === 'BLOCK') {
+          decisionBadge = '<span class="px-2 py-0.5 rounded bg-rose-950/80 text-rose-400 border border-rose-800 font-bold">BLOCK</span>';
+        } else if (ev.decision === 'STEP_UP_CHALLENGE') {
+          decisionBadge = '<span class="px-2 py-0.5 rounded bg-amber-950/80 text-amber-400 border border-amber-800 font-bold">STEP-UP (FIDO2)</span>';
+        } else {
+          decisionBadge = '<span class="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800 font-bold">ALLOW</span>';
+        }
+
         tr.innerHTML = `
-          <td class="py-2.5 px-2 text-slate-500">${dateStr}</td>
-          <td class="py-2.5 px-2 font-bold text-white">${ev.transaction_id.slice(0, 11)}</td>
-          <td class="py-2.5 px-2 font-bold text-white">$${ev.amount.toLocaleString()}</td>
-          <td class="py-2.5 px-2 text-slate-400">${ev.city} <span class="text-[10px] text-slate-600">(${ev.asn_org.slice(0, 12)})</span></td>
-          <td class="py-2.5 px-2 font-bold ${ev.risk_score >= 75 ? 'text-rose-400' : ev.risk_score >= 35 ? 'text-amber-400' : 'text-emerald-400'}">${ev.risk_score}</td>
-          <td class="py-2.5 px-2 font-bold">${ev.decision} <span class="text-[10px] text-amber-400">${ev.challenge_type ? '(' + ev.challenge_type.slice(0, 5) + ')' : ''}</span></td>
+          <td class="py-2.5 px-3 text-slate-500">${ev.timestamp}</td>
+          <td class="py-2.5 px-3 font-bold text-white">${ev.id}</td>
+          <td class="py-2.5 px-3 text-cyan-400">${ev.account}</td>
+          <td class="py-2.5 px-3 font-bold text-white">₦${ev.amount.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-slate-400">${ev.location} <span class="text-[10px] text-slate-600">(${ev.asn})</span></td>
+          <td class="py-2.5 px-3 font-bold ${ev.score >= 75 ? 'text-rose-400' : ev.score >= 35 ? 'text-amber-400' : 'text-emerald-400'}">${ev.score}</td>
+          <td class="py-2.5 px-3">${decisionBadge}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // Initialize
-    refreshStats();
+    // Load Preset Scenarios
+    function loadScenario(type) {
+      if (type === 'legit') {
+        document.getElementById('field-accountId').value = 'ACC-ZENITH-882910';
+        document.getElementById('field-amount').value = 45000;
+        document.getElementById('field-deviceId').value = 'dev_macbook_lagos_v1';
+        document.getElementById('field-userId').value = 'usr_chidi_9921';
+        document.getElementById('field-city').value = 'Lagos, Nigeria';
+        document.getElementById('field-lat').value = '6.5244';
+        document.getElementById('field-lon').value = '3.3792';
+        document.getElementById('field-organicCadence').checked = true;
+        document.getElementById('field-simSwapActive').checked = false;
+      } else if (type === 'sim_swap') {
+        document.getElementById('field-accountId').value = 'ACC-ZENITH-110482';
+        document.getElementById('field-amount').value = 1850000;
+        document.getElementById('field-deviceId').value = 'dev_unknown_android_s24';
+        document.getElementById('field-userId').value = 'usr_wealth_kalu';
+        document.getElementById('field-city').value = 'Abuja, Nigeria';
+        document.getElementById('field-lat').value = '9.0765';
+        document.getElementById('field-lon').value = '7.3986';
+        document.getElementById('field-organicCadence').checked = true;
+        document.getElementById('field-simSwapActive').checked = true;
+      } else if (type === 'geo_velocity') {
+        document.getElementById('field-accountId').value = 'ACC-ZENITH-440192';
+        document.getElementById('field-amount').value = 4500000;
+        document.getElementById('field-deviceId').value = 'dev_clone_terminal_x';
+        document.getElementById('field-userId').value = 'usr_lagos_exec';
+        document.getElementById('field-city').value = 'London, UK (Supersonic Velocity)';
+        document.getElementById('field-lat').value = '51.5074';
+        document.getElementById('field-lon').value = '-0.1278';
+        document.getElementById('field-organicCadence').checked = false;
+        document.getElementById('field-simSwapActive').checked = false;
+      }
+      // Auto-trigger transaction
+      document.getElementById('sandbox-form').dispatchEvent(new Event('submit'));
+    }
+
+    // Execute Transaction via Fetch (with local fallback mock)
+    async function executeTransaction(e) {
+      if (e) e.preventDefault();
+
+      const btnSpinner = document.getElementById('btn-execute-spinner');
+      const btnText = document.getElementById('btn-execute-text');
+      btnSpinner.classList.remove('hidden');
+      btnText.innerText = 'EVALUATING AT EDGE...';
+
+      const accountId = document.getElementById('field-accountId').value;
+      const amount = parseFloat(document.getElementById('field-amount').value) || 10000;
+      const deviceId = document.getElementById('field-deviceId').value;
+      const userId = document.getElementById('field-userId').value;
+      const city = document.getElementById('field-city').value;
+      const lat = parseFloat(document.getElementById('field-lat').value) || 6.5244;
+      const lon = parseFloat(document.getElementById('field-lon').value) || 3.3792;
+      const isOrganicCadence = document.getElementById('field-organicCadence').checked;
+      const isSimSwap = document.getElementById('field-simSwapActive').checked;
+
+      const payload = {
+        transaction_id: "tx_" + Math.random().toString(36).substring(2, 12),
+        user_id: userId,
+        account_id: accountId,
+        amount: amount,
+        currency: "NGN",
+        destination_account: "ACC-EXT-BENEFICIARY-009",
+        geo: {
+          latitude: lat,
+          longitude: lon,
+          city: city,
+          country_code: city.includes("London") ? "GB" : "NG"
+        },
+        device: {
+          fingerprint_hash: deviceId,
+          user_agent: navigator.userAgent,
+          screen_resolution: `${window.screen.width}x${window.screen.height}`,
+          is_webdriver: !isOrganicCadence && city.includes("London")
+        },
+        biometrics: {
+          keystroke_flight_mean_ms: isOrganicCadence ? 140.0 : 10.0,
+          keystroke_flight_variance_ms: isOrganicCadence ? 34.0 : 0.0,
+          keystroke_dwell_mean_ms: isOrganicCadence ? 85.0 : 12.0,
+          keystroke_dwell_variance_ms: isOrganicCadence ? 16.0 : 0.0,
+          mouse_curvature_score: isOrganicCadence ? 0.78 : 0.02,
+          interaction_time_ms: isOrganicCadence ? 3400.0 : 210.0
+        },
+        network: {
+          client_ip: isSimSwap ? "162.243.10.4" : "197.210.44.18",
+          asn_number: isSimSwap ? 14061 : 29465,
+          asn_organization: isSimSwap ? "DigitalOcean Datacenter" : "MTN Nigeria Communications",
+          is_datacenter_or_proxy: isSimSwap || city.includes("London"),
+          sim_swap_age_hours: isSimSwap ? 1.4 : null
+        }
+      };
+
+      let responseData;
+      let latencyMs = 7.2;
+      const startTime = performance.now();
+
+      try {
+        // Attempt POST to FastAPI backend endpoint
+        const response = await fetch('/api/v1/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          responseData = await response.json();
+          latencyMs = +(performance.now() - startTime).toFixed(1);
+        } else {
+          throw new Error("HTTP error " + response.status);
+        }
+      } catch (err) {
+        // Offline / Standalone Mock Fallback Engine
+        console.warn("[Aegis-X] Using local anomaly fallback:", err.message);
+        latencyMs = +(Math.random() * 2 + 6.2).toFixed(1);
+
+        if (city.includes("London") || !isOrganicCadence) {
+          responseData = {
+            transaction_id: payload.transaction_id,
+            status: "EVALUATED_AT_EDGE",
+            risk_score: 97.5,
+            decision: "BLOCK",
+            processing_latency_ms: latencyMs,
+            recommended_action: "TERMINATE_TRANSACTION_AT_EDGE",
+            forensic_tags: ["IMPOSSIBLE_TRAVELER_SUPERSONIC", "SPEED_14350_KMH", "ZERO_JITTER_KEYSTROKE", "TIER_4_EDGE_DROP"],
+            factors: {
+              geo_velocity: { score: 100.0, speed_kmh: 14350.0, status: "SUPERSONIC_IMPOSSIBLE_TRAVELER" },
+              behavioral_biometrics: { score: 95.0, flight_variance_ms: 0.0, status: "BOT_AUTOMATION_SCRIPT" },
+              network_telco: { score: 45.0, status: "COMMERCIAL_PROXY_RELAY" }
+            }
+          };
+        } else if (isSimSwap) {
+          responseData = {
+            transaction_id: payload.transaction_id,
+            status: "EVALUATED_AT_EDGE",
+            risk_score: 68.5,
+            decision: "STEP_UP_CHALLENGE",
+            processing_latency_ms: latencyMs,
+            recommended_action: "REQUIRE_FIDO2_PASSKEY_AUTHENTICATION",
+            forensic_tags: ["RECENT_SIM_SWAP_1.4H", "SMS_OTP_DISQUALIFIED", "DATACENTER_PROXY_IP", "TIER_2_BIOMETRIC_PASSKEY"],
+            factors: {
+              geo_velocity: { score: 15.0, speed_kmh: 12.0, status: "LOCAL_VICINITY" },
+              behavioral_biometrics: { score: 25.0, flight_variance_ms: 34.0, status: "ORGANIC_HUMAN" },
+              network_telco: { score: 85.0, sim_swap_hours: 1.4, status: "SIM_SWAP_THREAT_SMS_REVOKED" }
+            }
+          };
+        } else {
+          responseData = {
+            transaction_id: payload.transaction_id,
+            status: "EVALUATED_AT_EDGE",
+            risk_score: 12.0,
+            decision: "ALLOW",
+            processing_latency_ms: latencyMs,
+            recommended_action: "FORWARD_TO_CORE_BANKING_LEDGER",
+            forensic_tags: ["TRUSTED_DEVICE_HASH", "ORGANIC_TYPING_CADENCE", "LAGOS_RESIDENTIAL_ASN"],
+            factors: {
+              geo_velocity: { score: 5.0, speed_kmh: 0.0, status: "LOCAL_STATIONARY" },
+              behavioral_biometrics: { score: 10.0, flight_variance_ms: 34.0, status: "HUMAN_ORGANIC" },
+              network_telco: { score: 8.0, sim_swap_hours: null, status: "CLEAN_RESIDENTIAL_ISP" }
+            }
+          };
+        }
+      }
+
+      // Update UI with response
+      updateVerdictUI(responseData, amount, accountId);
+
+      // Add to live feed
+      feedEvents.unshift({
+        id: responseData.transaction_id,
+        timestamp: "Just now",
+        account: accountId,
+        amount: amount,
+        location: city.split(',')[0],
+        asn: isSimSwap ? "Datacenter Proxy" : "MTN Nigeria",
+        score: responseData.risk_score,
+        decision: responseData.decision
+      });
+      if (feedEvents.length > 25) feedEvents.pop();
+      renderFeedTable();
+
+      // Reset button
+      btnSpinner.classList.add('hidden');
+      btnText.innerText = 'EXECUTE TRANSACTION PAYLOAD';
+    }
+
+    function updateVerdictUI(data, amount, accountId) {
+      document.getElementById('verdict-tx-id').innerText = data.transaction_id;
+      document.getElementById('verdict-latency-val').innerText = `${data.processing_latency_ms} ms (edge)`;
+      document.getElementById('verdict-score-num').innerText = data.risk_score;
+      document.getElementById('verdict-amount-label').innerText = `₦${amount.toLocaleString()}`;
+      document.getElementById('verdict-acc-label').innerText = accountId;
+
+      const banner = document.getElementById('verdict-banner');
+      const scoreBox = document.getElementById('verdict-score-box');
+      const decisionText = document.getElementById('verdict-decision-text');
+      const recommendation = document.getElementById('verdict-recommendation');
+
+      if (data.decision === 'BLOCK') {
+        banner.className = "glass-card rounded-2xl p-6 border-l-4 border-l-rose-500 neon-crimson-glow transition-all";
+        scoreBox.className = "w-20 h-20 rounded-2xl bg-rose-950/70 border border-rose-500 flex flex-col items-center justify-center font-mono";
+        document.getElementById('verdict-score-num').className = "text-3xl font-black text-rose-400";
+        decisionText.className = "text-xl sm:text-2xl font-mono font-black text-rose-400 tracking-wide";
+        decisionText.innerText = "TERMINATED AT EDGE (BLOCK)";
+        recommendation.innerText = "Zero-trust policy tripped. Core banking ledger shielded before balance debit.";
+      } else if (data.decision === 'STEP_UP_CHALLENGE') {
+        banner.className = "glass-card rounded-2xl p-6 border-l-4 border-l-amber-500 transition-all";
+        scoreBox.className = "w-20 h-20 rounded-2xl bg-amber-950/70 border border-amber-500 flex flex-col items-center justify-center font-mono";
+        document.getElementById('verdict-score-num').className = "text-3xl font-black text-amber-400";
+        decisionText.className = "text-xl sm:text-2xl font-mono font-black text-amber-400 tracking-wide";
+        decisionText.innerText = "STEP-UP CHALLENGE REQUIRED (FIDO2)";
+        recommendation.innerText = "Telco SIM-swap risk detected. SMS OTP revoked; FIDO2 cryptographic biometric challenge enforced.";
+      } else {
+        banner.className = "glass-card rounded-2xl p-6 border-l-4 border-l-emerald-400 neon-emerald-glow transition-all";
+        scoreBox.className = "w-20 h-20 rounded-2xl bg-emerald-950/70 border border-emerald-500 flex flex-col items-center justify-center font-mono";
+        document.getElementById('verdict-score-num').className = "text-3xl font-black text-emerald-400";
+        decisionText.className = "text-xl sm:text-2xl font-mono font-black text-emerald-400 tracking-wide";
+        decisionText.innerText = "FORWARD TO CORE LEDGER (ALLOW)";
+        recommendation.innerText = "All risk heuristics passed. Pre-ledger debit authorized for Zenith Core Banking Vault.";
+      }
+
+      // Rules tags
+      const rulesContainer = document.getElementById('verdict-rules-container');
+      rulesContainer.innerHTML = '';
+      (data.forensic_tags || []).forEach(tag => {
+        const span = document.createElement('span');
+        span.className = "px-2.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300";
+        span.innerText = tag;
+        rulesContainer.appendChild(span);
+      });
+
+      // Format JSON terminal
+      document.getElementById('json-terminal-output').innerHTML = `<code>${JSON.stringify(data, null, 2)}</code>`;
+    }
+
+    function copyTerminalJson() {
+      const text = document.getElementById('json-terminal-output').innerText;
+      navigator.clipboard.writeText(text);
+      const copyBtn = document.getElementById('copy-text');
+      copyBtn.innerText = "Copied!";
+      setTimeout(() => copyBtn.innerText = "Copy JSON", 2000);
+    }
+
+    // Initialize on load
+    renderFeedTable();
   </script>
 </body>
 </html>

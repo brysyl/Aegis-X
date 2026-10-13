@@ -207,6 +207,7 @@ class VerifyMFARequest(BaseModel):
 
 # --- Core Gateway Endpoints ---
 
+@app.post("/api/v1/evaluate")
 @app.post("/v1/gateway/evaluate")
 async def evaluate_transaction(payload: EvaluateRequest, request: Request) -> Dict[str, Any]:
     """
